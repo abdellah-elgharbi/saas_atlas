@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { storageService } from '../services/storage';
+import { supabaseService } from '../services/supabaseService';
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sessionEmail = localStorage.getItem('session_email');
       if (sessionEmail) {
         // In a real app, this would verify a token
-        const usr = await storageService.getUser();
+        const usr = await supabaseService.getUser();
         if (usr.email === sessionEmail) {
           setUser(usr);
         }
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string) => {
     // Mock login
     if (email === 'admin@example.com') {
-      const usr = await storageService.getUser();
+      const usr = await supabaseService.getUser();
       setUser(usr);
       localStorage.setItem('session_email', email);
       return true;
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async () => {
     if (user) {
-      const updated = await storageService.getUser();
+      const updated = await supabaseService.getUser();
       setUser(updated);
     }
   };

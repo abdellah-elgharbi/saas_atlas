@@ -1,25 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { storageService } from '@/services/storage';
+import { supabaseService } from '@/services/supabaseService';
 import { useUser } from '@clerk/nextjs';
+import { useDailyLimit } from '@/hooks/useDailyLimit';
 import { Card } from '@/components/ui/Components';
 import { Users, Building2, Activity } from 'lucide-react';
 
 export default function Dashboard() {
   const { user: clerkUser, isLoaded } = useUser();
+  const { viewsToday, limitReached } = useDailyLimit();
   const [stats, setStats] = useState({
     contacts: 0,
     agencies: 0,
   });
-  
-  // ✅ SOLUTION : Déplacer tous les useState AVANT le return conditionnel
-  const [userData, setUserData] = useState<any>(null);
 
   useEffect(() => {
     const loadStats = async () => {
-      const agencies = await storageService.getAgencies();
-      const contactsRes = await storageService.getContacts(1, 1000);
+      const agencies = await supabaseService.getAgencies();
+      const contactsRes = await supabaseService.getContacts(1, 1000);
       setStats({
         contacts: contactsRes.total,
         agencies: agencies.length,
@@ -29,14 +28,6 @@ export default function Dashboard() {
       loadStats();
     }
   }, [isLoaded]);
-  
-  useEffect(() => {
-    const loadUserData = async () => {
-      const data = await storageService.getUser();
-      setUserData(data);
-    };
-    loadUserData();
-  }, []);
 
   // Maintenant le return conditionnel peut être ici
   if (!isLoaded) {
@@ -48,7 +39,7 @@ export default function Dashboard() {
   }
 
   const LIMIT = 50;
-  const currentViews = userData?.dailyContactViews || 0;
+  const currentViews = viewsToday || 0;
   const remaining = Math.max(0, LIMIT - currentViews);
   const usagePercent = Math.min(100, Math.round((currentViews / LIMIT) * 100));
 
@@ -80,7 +71,7 @@ export default function Dashboard() {
             <h3 className="text-xl font-bold mb-2">Daily Data Allowance</h3>
             <p className="opacity-90 max-w-xl text-blue-100">
               Every contact record displayed counts towards your daily limit. 
-              {remaining === 0 
+              {limitReached
                 ? " You have reached your limit for today."
                 : ` You can view ${remaining} more contacts today.`
               }
@@ -98,7 +89,7 @@ export default function Dashboard() {
           <div className="w-full bg-black/20 rounded-full h-2">
             <div 
               style={{ width: `${usagePercent}%` }} 
-              className={`h-2 rounded-full transition-all duration-500 ${usagePercent >= 100 ? 'bg-red-400' : 'bg-white'}`}
+              className={`h-2 rounded-full transition-all duration-500 ${limitReached ? 'bg-red-400' : 'bg-white'}`}
             ></div>
           </div>
         </div>
@@ -127,15 +118,15 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-3 gap-6 text-sm">
           <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
              <span className="block text-slate-500 mb-1">Architecture</span>
-             <span className="font-semibold text-slate-900 dark:text-white">Next.js 15</span>
+             <span className="font-semibold text-slate-900 dark:text-white">Next.js 16</span>
           </div>
           <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
              <span className="block text-slate-500 mb-1">Authentication</span>
-             <span className="font-semibold text-slate-900 dark:text-white">Clerk (Simulated)</span>
+             <span className="font-semibold text-slate-900 dark:text-white">Clerk</span>
           </div>
           <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
              <span className="block text-slate-500 mb-1">Database</span>
-             <span className="font-semibold text-slate-900 dark:text-white">Read-Only JSON</span>
+             <span className="font-semibold text-slate-900 dark:text-white">Supabase PostgreSQL</span>
           </div>
         </div>
       </Card>

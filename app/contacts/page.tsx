@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { storageService } from '@/services/storage';
+import { supabaseService } from '@/services/supabaseService';
 import { Contact, Agency } from '@/types';
 import { Button, Card } from '@/components/ui/Components';
 import { LimitModal } from '@/components/ui/LimitModal';
@@ -40,7 +40,7 @@ export default function Contacts() {
 
   // Load Agencies once
   useEffect(() => {
-    storageService.getAgencies().then(setAgencies);
+    supabaseService.getAgencies().then(setAgencies);
   }, []);
 
   // ✅ FIXED: Only show modal when limit is FRESHLY reached (not on initial load)
@@ -71,6 +71,13 @@ export default function Contacts() {
     const fetchData = async () => {
       setLoadingData(true);
 
+      // Si limitReached devient false (fenêtre réinitialisée), reset cached mode
+      if (!limitReached && isCachedMode) {
+        console.log('✅ Fenêtre réinitialisée! Reset du cached mode');
+        setIsCachedMode(false);
+        hasShownModal.current = false;
+      }
+
       // If we are already in cached mode (limit reached), just show cache
       if (isCachedMode || (limitReached && viewsToday >= 50)) {
         console.log('📦 Using cached contacts');
@@ -82,7 +89,7 @@ export default function Contacts() {
 
       // Fetch 'Real' Data
       console.log('🔄 Fetching fresh data for page:', page);
-      const res = await storageService.getContacts(page, 10);
+      const res = await supabaseService.getContacts(page, 10);
       
       // Attempt to add views
       if (res.data.length > 0) {
@@ -94,7 +101,7 @@ export default function Contacts() {
         if (!success) {
           // ✅ Limit Hit during this fetch! Show modal immediately
           console.log('🛑 Limit reached during fetch, switching to cache');
-          const user = await storageService.getUser();
+          const user = await supabaseService.getUser();
           setDisplayContacts(user.cachedContacts); 
           setTotal(user.cachedContacts.length);
           
@@ -122,7 +129,7 @@ export default function Contacts() {
       fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, isLimitLoading, isCachedMode]);
+  }, [page, isLimitLoading, isCachedMode, limitReached]);
 
   // Clerk middleware handles authentication
   if (!isClerkLoaded) {

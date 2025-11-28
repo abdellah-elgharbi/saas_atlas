@@ -1,9 +1,7 @@
 'use client';
 
-'use client';
-
 import { useEffect, useState } from 'react';
-import { storageService } from '@/services/storage';
+import { supabaseService } from '@/services/supabaseService';
 import { Agency } from '@/types';
 import { Card } from '@/components/ui/Components';
 import { useUser } from '@clerk/nextjs';
@@ -15,7 +13,7 @@ export default function Agencies() {
 
   useEffect(() => {
     const loadAgencies = async () => {
-      const data = await storageService.getAgencies();
+      const data = await supabaseService.getAgencies();
       setAgencies(data);
       setLoading(false);
     };
@@ -70,21 +68,21 @@ export default function Agencies() {
                   </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                      {agency.state_code}
+                      {agency.state_code || '-'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.type}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.total_students.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.total_schools}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.phone}</td>
-                  <td className="px-6 py-4 text-blue-600 hover:underline cursor-pointer">{agency.website}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.locale}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.type || '-'}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.total_students ? agency.total_students.toLocaleString() : '-'}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.total_schools || '-'}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.phone || '-'}</td>
+                  <td className="px-6 py-4 text-blue-600 hover:underline cursor-pointer">{agency.website || '-'}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{agency.locale || '-'}</td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                      {agency.status}
+                      {agency.status || 'Active'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-500 text-xs">{new Date(agency.updated_at).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 text-slate-500 text-xs">{agency.updated_at ? new Date(agency.updated_at).toLocaleDateString() : '-'}</td>
                 </tr>
               ))}
             </tbody>
