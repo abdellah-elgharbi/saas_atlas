@@ -70,28 +70,26 @@ Gère les comptes utilisateurs et leurs limitations d'accès.
 - Statistiques par région
 - Graphiques de répartition
 
-### 2. Gestion des agences
+### 2. Consultation des agences
 
-**Objectif :** Consultation et gestion des organisations partenaires
+**Objectif :** Visualisation des organisations partenaires
 
 **Fonctionnalités :**
-- Liste complète des agences
+- Liste complète des agences (lecture seule)
 - Filtrage par région, type, statut
 - Recherche par nom
 - Visualisation des détails complets
 - Accès aux contacts associés
 
-### 3. Gestion des contacts
+### 3. Consultation des contacts
 
-**Objectif :** Consultation et gestion des personnes de contact
+**Objectif :** Visualisation des personnes de contact
 
 **Fonctionnalités :**
 - Liste paginée (50 contacts par page)
 - Recherche multi-critères
-- Création de nouveaux contacts
-- Modification des informations
-- Suppression de contacts
-- Association avec une agence
+- Affichage des informations détaillées
+- Consultation limitée par quotas quotidiens
 
 ### 4. Système de quotas
 
@@ -151,19 +149,17 @@ Le fichier `services/supabaseService.ts` centralise toutes les opérations sur l
 
 #### Agences
 - `getAgencies()` - Récupère toutes les agences
-- `createAgency(data)` - Crée une nouvelle agence
 
 #### Contacts
 - `getContacts(page, limit)` - Liste paginée de contacts
 - `searchContacts(query)` - Recherche par nom, email, titre
-- `createContact(data)` - Crée un nouveau contact
-- `updateContact(id, data)` - Modifie un contact existant
-- `deleteContact(id)` - Supprime un contact
 
 #### Utilisateurs
 - `getUser()` - Récupère l'utilisateur connecté
 - `incrementViewCount(amount)` - Incrémente le compteur de vues
 - `canViewContacts()` - Vérifie si la limite est atteinte
+
+**Note :** Les méthodes de création, modification et suppression (`createAgency`, `createContact`, `updateContact`, `deleteContact`) existent dans le code mais sont réservées aux administrateurs uniquement.
 
 ---
 
@@ -175,7 +171,8 @@ Supabase applique des politiques de sécurité au niveau des lignes :
 
 **Agences et Contacts :**
 - Lecture autorisée pour tous les utilisateurs authentifiés
-- Modification réservée aux administrateurs
+- Aucune modification possible (lecture seule)
+- Création, modification et suppression réservées aux administrateurs
 
 **Utilisateurs :**
 - Chaque utilisateur ne peut accéder qu'à ses propres données
