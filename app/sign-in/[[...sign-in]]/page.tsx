@@ -7,10 +7,12 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 export default function SignInPage() {
   return (
     <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 p-4 relative overflow-hidden">
+      
       {/* Theme Toggle Button - Fixed top right */}
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
+
       {/* Animated background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl animate-float"></div>
@@ -20,11 +22,13 @@ export default function SignInPage() {
 
       {/* Main container */}
       <div className="relative w-full max-w-md animate-scale-in">
+
         {/* Card with glassmorphism effect */}
         <div className="relative backdrop-blur-xl bg-white/80 dark:bg-slate-800/80 rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/50 overflow-hidden hover-lift group">
+
           {/* Animated border */}
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500"></div>
-          
+
           {/* Header */}
           <div className="relative p-6 pb-4 text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 mb-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/50 animate-float">
@@ -42,34 +46,34 @@ export default function SignInPage() {
 
           {/* Composant Clerk */}
           <div className="relative px-6 pb-6 max-h-[60vh] overflow-y-auto">
-            <SignIn 
+            <SignIn
               appearance={{
                 elements: {
                   rootBox: "w-full",
                   card: "bg-transparent shadow-none",
                   headerTitle: "hidden",
                   headerSubtitle: "hidden",
-                  socialButtonsBlockButton: "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200",
-                  socialButtonsBlockButtonText: "text-slate-700 dark:text-slate-200 font-medium",
-                  dividerLine: "bg-slate-200 dark:bg-slate-700",
+                  socialButtonsBlockButton: "bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200",
+                  socialButtonsBlockButtonText: "text-slate-900 dark:text-slate-100 font-medium",
+                  dividerLine: "bg-slate-300 dark:bg-slate-600",
                   dividerText: "text-slate-500 dark:text-slate-400",
-                  formFieldInput: "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 rounded-xl transition-all duration-200",
-                  formFieldLabel: "text-slate-700 dark:text-slate-300 font-medium",
+                  formFieldInput: "bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 rounded-xl transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-500",
+                  formFieldLabel: "text-slate-800 dark:text-slate-200 font-medium",
                   formButtonPrimary: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all duration-200 rounded-xl font-semibold",
                   footerActionLink: "text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium",
-                  identityPreviewText: "text-slate-700 dark:text-slate-300",
+                  identityPreviewText: "text-slate-800 dark:text-slate-200",
                   formResendCodeLink: "text-blue-600 dark:text-blue-400 hover:text-blue-700",
                   footer: "hidden",
-                }
+                },
               }}
             />
-            
+
             {/* Custom Sign up link */}
             <div className="mt-4 text-center">
               <p className="text-slate-600 dark:text-slate-400 text-xs">
                 Don't have an account?{' '}
-                <Link 
-                  href="/sign-up" 
+                <Link
+                  href="/sign-up"
                   className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200 hover:underline"
                 >
                   Create an account
@@ -95,6 +99,7 @@ export default function SignInPage() {
       <div className="absolute top-20 right-20 w-2 h-2 bg-indigo-500 rounded-full animate-ping [animation-delay:0.3s]"></div>
       <div className="absolute bottom-20 left-20 w-2 h-2 bg-purple-500 rounded-full animate-ping [animation-delay:0.7s]"></div>
       <div className="absolute bottom-10 right-10 w-2 h-2 bg-blue-500 rounded-full animate-ping [animation-delay:1s]"></div>
+
     </div>
   );
 }
