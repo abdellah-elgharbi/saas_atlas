@@ -67,8 +67,6 @@ Gère les comptes utilisateurs et leurs limitations d'accès.
 **Éléments affichés :**
 - Nombre total d'agences
 - Nombre total de contacts
-- Statistiques par région
-- Graphiques de répartition
 
 ### 2. Consultation des agences
 
@@ -76,10 +74,7 @@ Gère les comptes utilisateurs et leurs limitations d'accès.
 
 **Fonctionnalités :**
 - Liste complète des agences (lecture seule)
-- Filtrage par région, type, statut
-- Recherche par nom
 - Visualisation des détails complets
-- Accès aux contacts associés
 
 ### 3. Consultation des contacts
 
