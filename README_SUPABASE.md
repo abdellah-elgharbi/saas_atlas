@@ -1,285 +1,191 @@
-# 🎯 SaaS CRM - Configuration Supabase complétée
+# Documentation Projet - SaaS CRM
 
-## ✅ Status: PRÊT POUR DONNÉES RÉELLES
-
-Votre application Next.js est maintenant entièrement configurée pour utiliser **Supabase PostgreSQL** avec vos données réelles.
-
----
-
-## 📦 Qu'est-ce qui a changé?
-
-### Avant ❌
-- Données mock stockées en localStorage
-- Limites de test
-- Renouveau à chaque rechargement
-
-### Maintenant ✅
-- **Données réelles** stockées en PostgreSQL
-- **Authentification** via Supabase/Clerk
-- **Persistance** des données
-- **Limite quotidienne** suivie en base de données
+**Version:** 1.0  
+**Statut:** En production  
+**Dernière mise à jour:** Novembre 2024
 
 ---
 
-## 🚀 Démarrer en 5 étapes
+## Vue d'ensemble du projet
 
-### 1️⃣ Créer les tables (5 min)
-```bash
-# Dans Supabase Dashboard → SQL Editor
-# Copiez/collez le fichier: SCHEMA_SQL.sql
-# Cliquez RUN
-```
+Cette application est un système de gestion de la relation client (CRM) SaaS développé avec Next.js et Supabase. Elle permet de gérer des agences partenaires et leurs contacts associés avec un système de quotas quotidiens.
 
-### 2️⃣ Insérer des données (5 min)
-```bash
-# Option A: Données de test (rapide)
-# Copiez/collez: TEST_DATA.sql dans SQL Editor
+### Technologies utilisées
 
-# Option B: Vos données (CSV ou SQL)
-# Table Editor → Insert from CSV
-```
-
-### 3️⃣ Lancer l'application
-```bash
-npm run dev
-```
-
-### 4️⃣ Ouvrir le navigateur
-```
-http://localhost:3000
-```
-
-### 5️⃣ Vérifier les données
-- ✅ Dashboard affiche les stats
-- ✅ Agencies affiche votre liste
-- ✅ Contacts affiche vos données
+- **Frontend:** Next.js 14 (App Router), React, TypeScript
+- **Base de données:** Supabase PostgreSQL
+- **Authentification:** Clerk / Supabase Auth
+- **Styling:** Tailwind CSS
+- **Déploiement:** Vercel
 
 ---
 
-## 📁 Fichiers importants
+## Architecture de l'application
 
-| Fichier | Description |
-|---------|-------------|
-| `SCHEMA_SQL.sql` | 📋 Script pour créer les tables |
-| `TEST_DATA.sql` | 🧪 Données de test |
-| `SUPABASE_REAL_DATA.md` | 📖 Guide détaillé |
-| `SETUP_COMPLETE.md` | ✅ Résumé complet |
-| `.env.local` | 🔑 Clés Supabase (déjà configurées) |
-| `services/supabaseService.ts` | 🔌 Client Supabase |
-| `lib/supabaseClient.ts` | ⚙️ Initialisation |
+### Structure des données
 
----
+L'application repose sur trois entités principales :
 
-## 🗄️ Structure des données
+#### 1. Agences (`agencies`)
 
-### Table `agencies` (Agences)
-```javascript
-{
-  id: UUID,                    // Clé primaire
-  name: string,                // Nom de l'agence
-  state: string,               // État/Région
-  state_code: string,          // Code (IDF, HDS...)
-  type: string,                // Type (Académie, Lycée...)
-  total_students: number,      // Nombre d'étudiants
-  total_schools: number,       // Nombre d'écoles
-  phone: string,               // Téléphone
-  website: string,             // Site web
-  status: 'Active' | 'Inactive',
-  created_at: timestamp,
-  updated_at: timestamp
-}
-```
+Représente les organisations partenaires (académies, lycées, institutions).
 
-### Table `contacts` (Contacts)
-```javascript
-{
-  id: UUID,                    // Clé primaire
-  first_name: string,          // Prénom
-  last_name: string,           // Nom
-  email: string,               // Email
-  phone: string,               // Téléphone
-  title: string,               // Titre (Directeur...)
-  department: string,          // Département
-  agency_id: UUID,             // Référence à agencies
-  created_at: timestamp,
-  updated_at: timestamp
-}
-```
+**Informations stockées :**
+- Identité : nom, type, localisation
+- Contact : téléphone, site web
+- Statistiques : nombre d'étudiants, nombre d'écoles
+- Statut : actif ou inactif
 
-### Table `users` (Utilisateurs)
-```javascript
-{
-  id: UUID,                    // Clé primaire
-  email: string,               // Email unique
-  name: string,                // Nom
-  daily_contact_views: number, // Vues d'aujourd'hui
-  last_reset: date,            // Dernière réinitialisation
-  cached_contacts: JSONB,      // Cache des contacts vus
-  created_at: timestamp,
-  updated_at: timestamp
-}
-```
+#### 2. Contacts (`contacts`)
+
+Représente les personnes associées aux agences.
+
+**Informations stockées :**
+- Identité : prénom, nom
+- Coordonnées : email, téléphone
+- Position : titre, département
+- Relation : rattachement à une agence
+
+#### 3. Utilisateurs (`users`)
+
+Gère les comptes utilisateurs et leurs limitations d'accès.
+
+**Informations stockées :**
+- Identité : email, nom
+- Quotas : nombre de contacts vus par jour
+- Cache : liste des contacts déjà consultés
+- Horodatage : dernière réinitialisation
 
 ---
 
-## 🔌 Services disponibles
+## Fonctionnalités principales
 
-### `supabaseService`
+### 1. Dashboard
 
-```typescript
-import { supabaseService } from '@/services/supabaseService';
+**Objectif :** Vue d'ensemble des données clés
 
-// Agences
-await supabaseService.getAgencies()                    // Toutes les agences
-await supabaseService.createAgency(data)               // Créer une agence
+**Éléments affichés :**
+- Nombre total d'agences
+- Nombre total de contacts
+- Statistiques par région
+- Graphiques de répartition
 
-// Contacts
-await supabaseService.getContacts(page, limit)         // Contacts paginés
-await supabaseService.createContact(data)              // Créer un contact
-await supabaseService.searchContacts(query)            // Rechercher
-await supabaseService.updateContact(id, data)          // Modifier
-await supabaseService.deleteContact(id)                // Supprimer
+### 2. Gestion des agences
 
-// Utilisateurs
-await supabaseService.getUser()                        // L'utilisateur actuel
-await supabaseService.incrementViewCount(amount)       // +1 vue
-await supabaseService.canViewContacts()                // Limite atteinte?
+**Objectif :** Consultation et gestion des organisations partenaires
+
+**Fonctionnalités :**
+- Liste complète des agences
+- Filtrage par région, type, statut
+- Recherche par nom
+- Visualisation des détails complets
+- Accès aux contacts associés
+
+### 3. Gestion des contacts
+
+**Objectif :** Consultation et gestion des personnes de contact
+
+**Fonctionnalités :**
+- Liste paginée (50 contacts par page)
+- Recherche multi-critères
+- Création de nouveaux contacts
+- Modification des informations
+- Suppression de contacts
+- Association avec une agence
+
+### 4. Système de quotas
+
+**Objectif :** Limiter l'accès aux coordonnées sensibles
+
+**Règles appliquées :**
+- Maximum 50 contacts consultables par jour
+- Réinitialisation automatique à minuit
+- Affichage d'un avertissement à l'approche de la limite
+- Blocage après dépassement de la limite
+- Cache en base de données pour persistance
+
+---
+
+## Flux de données
+
+### Récupération des agences
+
+```
+1. L'utilisateur accède à la page Agences
+2. L'application appelle supabaseService.getAgencies()
+3. Requête SQL vers la table 'agencies'
+4. Les données sont retournées et affichées
+```
+
+### Consultation d'un contact
+
+```
+1. L'utilisateur clique sur un contact
+2. Vérification du quota quotidien
+3. Si quota disponible :
+   - Affichage des coordonnées complètes
+   - Incrémentation du compteur
+   - Mise en cache du contact
+4. Si quota dépassé :
+   - Affichage d'un message d'erreur
+   - Proposition d'upgrade
+```
+
+### Création d'un contact
+
+```
+1. L'utilisateur remplit le formulaire
+2. Validation des données côté client
+3. Appel à supabaseService.createContact()
+4. Insertion en base de données
+5. Confirmation et rafraîchissement de la liste
 ```
 
 ---
 
-## 💻 Exemples d'utilisation
+## Service Supabase
 
-### Afficher toutes les agences
-```tsx
-'use client';
+Le fichier `services/supabaseService.ts` centralise toutes les opérations sur la base de données.
 
-import { useEffect, useState } from 'react';
-import { supabaseService } from '@/services/supabaseService';
+### Méthodes disponibles
 
-export default function Agencies() {
-  const [agencies, setAgencies] = useState([]);
+#### Agences
+- `getAgencies()` - Récupère toutes les agences
+- `createAgency(data)` - Crée une nouvelle agence
 
-  useEffect(() => {
-    supabaseService.getAgencies().then(setAgencies);
-  }, []);
+#### Contacts
+- `getContacts(page, limit)` - Liste paginée de contacts
+- `searchContacts(query)` - Recherche par nom, email, titre
+- `createContact(data)` - Crée un nouveau contact
+- `updateContact(id, data)` - Modifie un contact existant
+- `deleteContact(id)` - Supprime un contact
 
-  return (
-    <ul>
-      {agencies.map(agency => (
-        <li key={agency.id}>{agency.name} - {agency.state}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-### Récupérer les contacts avec pagination
-```typescript
-const { data: contacts, total } = await supabaseService.getContacts(1, 50);
-console.log(`Page 1: ${contacts.length} / ${total} contacts`);
-```
-
-### Créer un nouveau contact
-```typescript
-const newContact = await supabaseService.createContact({
-  first_name: 'Marie',
-  last_name: 'Dupont',
-  email: 'marie@example.com',
-  phone: '+33 6 12 34 56 78',
-  title: 'Directrice',
-  department: 'Administration',
-  agency_id: 'uuid-agence'
-});
-```
+#### Utilisateurs
+- `getUser()` - Récupère l'utilisateur connecté
+- `incrementViewCount(amount)` - Incrémente le compteur de vues
+- `canViewContacts()` - Vérifie si la limite est atteinte
 
 ---
 
-## 🔒 Sécurité (Row Level Security)
+## Sécurité
 
-Les données sont protégées:
+### Row Level Security (RLS)
 
-| Table | Accès |
-|-------|-------|
-| `agencies` | Lecture: tous les utilisateurs authentifiés |
-| `contacts` | Lecture: tous les utilisateurs authentifiés |
-| `users` | Lecture/Écriture: l'utilisateur lui-même |
+Supabase applique des politiques de sécurité au niveau des lignes :
 
----
+**Agences et Contacts :**
+- Lecture autorisée pour tous les utilisateurs authentifiés
+- Modification réservée aux administrateurs
 
-## 📊 Limites quotidiennes
+**Utilisateurs :**
+- Chaque utilisateur ne peut accéder qu'à ses propres données
+- Lecture et modification limitées à son propre compte
 
-- **Max 50 contacts** affichables par jour
-- Réinitialisation à **minuit**
-- Cache stocké en base de données
-- Modal d'avertissement quand limite atteinte
+### Authentification
 
----
-
-## 🧪 Tester rapidement
-
-### Dans la console (F12)
-```javascript
-// Voir les agences
-await supabaseService.getAgencies().then(d => console.log(d))
-
-// Voir les contacts
-await supabaseService.getContacts(1, 10).then(d => console.log(d))
-
-// Voir l'utilisateur
-await supabaseService.getUser().then(d => console.log(d))
-```
+Toutes les requêtes nécessitent un utilisateur authentifié via Clerk ou Supabase Auth. Le token JWT est automatiquement inclus dans les en-têtes des requêtes.
 
 ---
 
-## 🐛 Dépannage
-
-### ❌ "Cannot read properties of undefined"
-**Cause:** Les tables ne sont pas créées  
-**Solution:** Exécutez `SCHEMA_SQL.sql` dans Supabase
-
-### ❌ "Row Level Security violation"
-**Cause:** Vous n'êtes pas authentifié  
-**Solution:** Connectez-vous via Clerk (`/sign-in`)
-
-### ❌ Aucune donnée n'apparaît
-**Cause:** Les tables sont vides  
-**Solution:** Exécutez `TEST_DATA.sql` dans Supabase
-
-### ❌ "TypeError: supabaseService is undefined"
-**Cause:** Mauvais chemin d'import  
-**Solution:** Utilisez `@/services/supabaseService`
-
----
-
-## 📚 Ressources
-
-- [Supabase Dashboard](https://app.supabase.com)
-- [Supabase Docs](https://supabase.com/docs)
-- [Supabase JS SDK](https://supabase.com/docs/reference/javascript)
-- [PostgreSQL](https://www.postgresql.org/docs)
-- [Next.js](https://nextjs.org/docs)
-
----
-
-## ✨ Prochaines étapes
-
-- [ ] Créer les tables (SCHEMA_SQL.sql)
-- [ ] Insérer des données (TEST_DATA.sql)
-- [ ] Lancer l'app (`npm run dev`)
-- [ ] Tester les pages
-- [ ] Importer vos vraies données
-- [ ] Configurer l'authentification Supabase
-- [ ] Deployer en production
-
----
-
-## 📞 Support
-
-Pour plus d'aide, consultez:
-- `SUPABASE_REAL_DATA.md` - Guide complet
-- `SETUP_COMPLETE.md` - Checklist
-- `SCHEMA_SQL.sql` - Schéma des tables
-- `TEST_DATA.sql` - Données d'exemple
-
-**C'est parti! 🚀**
+**Préparé par :** Équipe Technique  
+**Dernière révision :** Novembre 2024
