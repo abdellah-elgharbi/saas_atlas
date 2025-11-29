@@ -6,8 +6,10 @@ import { Contact, Agency } from '@/types';
 import { Button, Card } from '@/components/ui/Components';
 import { LimitModal } from '@/components/ui/LimitModal';
 import { useDailyLimit } from '@/hooks/useDailyLimit';
-import { ChevronLeft, ChevronRight, Database } from 'lucide-react';
+import { Database } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+
+const ITEMS_PER_PAGE = 10;
 
 export default function Contacts() {
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
@@ -19,45 +21,26 @@ export default function Contacts() {
   const [page, setPage] = useState(1);
   const [loadingData, setLoadingData] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [isCachedMode, setIsCachedMode] = useState(false);
   
-  // ✅ Track if we've shown the modal and initial load
   const hasShownModal = useRef(false);
   const isInitialLoad = useRef(true);
   const previousViewsToday = useRef(0);
 
-  // DEBUG: Log state changes
-  useEffect(() => {
-    console.log('🔍 DEBUG STATE:', { 
-      viewsToday, 
-      limitReached, 
-      isCachedMode,
-      hasShownModal: hasShownModal.current,
-      isInitialLoad: isInitialLoad.current,
-      cachedContactsLength: cachedContacts.length 
-    });
-  }, [viewsToday, limitReached, isCachedMode, cachedContacts]);
-
-  // Load Agencies once
   useEffect(() => {
     supabaseService.getAgencies().then(setAgencies);
   }, []);
 
-  // ✅ FIXED: Only show modal when limit is FRESHLY reached (not on initial load)
   useEffect(() => {
-    // Skip initial load
     if (isInitialLoad.current) {
       isInitialLoad.current = false;
       previousViewsToday.current = viewsToday;
       return;
     }
 
-    // Only show modal if:
-    // 1. Limit is reached
-    // 2. We haven't shown the modal yet
-    // 3. Views actually increased (wasn't already at 50)
     if (limitReached && !hasShownModal.current && previousViewsToday.current < 50 && viewsToday >= 50) {
-      console.log('🚨 SHOWING MODAL - Limit just reached!');
       setShowModal(true);
       setIsCachedMode(true);
       hasShownModal.current = true;
@@ -66,55 +49,38 @@ export default function Contacts() {
     previousViewsToday.current = viewsToday;
   }, [limitReached, viewsToday]);
 
-  // Main Data Loading Logic
   useEffect(() => {
     const fetchData = async () => {
       setLoadingData(true);
 
-      // Si limitReached devient false (fenêtre réinitialisée), reset cached mode
       if (!limitReached && isCachedMode) {
-        console.log('✅ Fenêtre réinitialisée! Reset du cached mode');
         setIsCachedMode(false);
         hasShownModal.current = false;
       }
 
-      // If we are already in cached mode (limit reached), just show cache
       if (isCachedMode || (limitReached && viewsToday >= 50)) {
-        console.log('📦 Using cached contacts');
         setDisplayContacts(cachedContacts);
         setTotal(cachedContacts.length);
         setLoadingData(false);
         return;
       }
 
-      // Fetch 'Real' Data
-      console.log('🔄 Fetching fresh data for page:', page);
       const res = await supabaseService.getContacts(page, 10);
-      
-      // Attempt to add views
+
       if (res.data.length > 0) {
-        const currentViews = viewsToday;
-        console.log(`📊 Current views: ${currentViews}, Adding: ${res.data.length}`);
-        
         const success = await addViews(res.data);
 
         if (!success) {
-          // ✅ Limit Hit during this fetch! Show modal immediately
-          console.log('🛑 Limit reached during fetch, switching to cache');
           const user = await supabaseService.getUser();
-          setDisplayContacts(user.cachedContacts); 
+          setDisplayContacts(user.cachedContacts);
           setTotal(user.cachedContacts.length);
-          
-          // ✅ Trigger modal immediately when limit is hit
+
           if (!hasShownModal.current) {
-            console.log('🚨 SHOWING MODAL NOW - Limit just hit!');
             setShowModal(true);
             hasShownModal.current = true;
           }
           setIsCachedMode(true);
         } else {
-          // Limit OK
-          console.log('✅ Views added successfully');
           setDisplayContacts(res.data);
           setTotal(res.total);
         }
@@ -128,82 +94,118 @@ export default function Contacts() {
     if (!isLimitLoading && !isInitialLoad.current) {
       fetchData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, isLimitLoading, isCachedMode, limitReached]);
 
-  // Clerk middleware handles authentication
   if (!isClerkLoaded) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-light dark:border-primary-dark"></div>
-        <p className="mt-4 text-slate-500">Loading...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary/70 dark:border-primary-light"></div>
+        <p className="mt-4 text-slate-500 text-sm">Chargement…</p>
       </div>
     );
   }
 
-  const totalPages = isCachedMode 
-    ? 1 
-    : Math.ceil(total / 10);
+  const totalPages = isCachedMode ? 1 : Math.ceil(total / ITEMS_PER_PAGE);
 
   if (isLimitLoading || loadingData) {
-     return (
-       <div className="flex flex-col items-center justify-center min-h-[400px]">
-         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-light dark:border-primary-dark"></div>
-         <p className="mt-4 text-slate-500">Loading contacts...</p>
-       </div>
-     );
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary/70 dark:border-primary-light"></div>
+        <p className="mt-4 text-slate-500 text-sm">Chargement des contacts…</p>
+      </div>
+    );
   }
+
+  // Génère une liste compacte de pages à afficher (1, ..., n-2..n+2, ..., total)
+  const generatePageNumbers = () => {
+    const pages: (number | '...')[] = [];
+    const total = totalPages;
+    const current = page;
+
+    if (total <= 7) {
+      // Si peu de pages, afficher toutes
+      for (let i = 1; i <= total; i++) pages.push(i);
+      return pages;
+    }
+
+    // Toujours afficher la première page
+    pages.push(1);
+
+    // Si l'écart entre début et current est important, ajouter '...'
+    if (current > 4) {
+      pages.push('...');
+    }
+
+    // Ajouter pages autour de la page courante (current-2 -> current+2)
+    const start = Math.max(2, current - 2);
+    const end = Math.min(total - 1, current + 2);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    // Si l'écart entre current et la fin est important, ajouter '...'
+    if (current < total - 3) {
+      pages.push('...');
+    }
+
+    // Toujours afficher la dernière page
+    pages.push(total);
+
+    return pages;
+  };
 
   return (
     <div className="space-y-6">
-      <LimitModal 
-        isOpen={showModal} 
-        onClose={() => setShowModal(false)} 
-        viewsToday={viewsToday}
-      />
+      <LimitModal isOpen={showModal} onClose={() => setShowModal(false)} viewsToday={viewsToday} />
 
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
             Contacts Directory
-            {isCachedMode && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full border border-amber-200">Offline / Cached Mode</span>}
+            {isCachedMode && (
+              <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                Cached Mode
+              </span>
+            )}
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
             {isCachedMode 
-              ? "Viewing only previously unlocked contacts." 
-              : "Search and connect with educational leaders."}
+              ? "Affichage des contacts déjà consultés aujourd’hui." 
+              : "Recherchez et connectez-vous avec les responsables éducatifs."}
           </p>
         </div>
-        <div className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+
+        <div className={`px-4 py-2 rounded-xl shadow-sm text-sm font-medium border transition-all duration-200 ${
           limitReached 
-            ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300' 
-            : 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+            ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300' 
+            : 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-700 text-slate-700'
         }`}>
-          Daily Limit: <span className="font-bold">{viewsToday}</span> / 50
+          Daily Limit : <span className="font-bold">{viewsToday}</span> / 50
         </div>
       </div>
 
+      {/* Cached mode info */}
       {isCachedMode && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
-          <Database className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 shadow-sm flex items-start gap-4">
+          <Database className="w-6 h-6 text-blue-600 dark:text-blue-300" />
           <div>
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm">You are viewing cached data</h4>
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm">Données en cache</h4>
             <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
-              You have reached your daily limit. Only contacts you have already viewed today are visible below.
-              Upgrade your plan to unlock unlimited access.
+              Vous avez atteint votre limite quotidienne. Seuls les contacts déjà consultés sont visibles.
             </p>
           </div>
         </div>
       )}
 
-      <Card className="overflow-hidden border border-slate-200 dark:border-slate-700">
+      {/* Card with table */}
+      <Card className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg backdrop-blur-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
               <tr>
                 <th className="px-6 py-4 font-semibold">Name</th>
                 <th className="px-6 py-4 font-semibold">Title</th>
-                <th className="px-6 py-4 font-semibold">Agency</th>
                 <th className="px-6 py-4 font-semibold">Email</th>
                 <th className="px-6 py-4 font-semibold">Phone</th>
               </tr>
@@ -211,28 +213,33 @@ export default function Contacts() {
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {displayContacts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                    No contacts available to display.
-                  </td>
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500">Aucun contact disponible.</td>
                 </tr>
               ) : (
                 displayContacts.map((contact) => {
-                  const agencyName = agencies.find(a => a.id === contact.agency_id)?.name || 'Unknown Agency';
                   return (
-                    <tr key={contact.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-slate-900 dark:text-white">{contact.first_name} {contact.last_name}</div>
-                        <div className="text-xs text-slate-500">{contact.department}</div>
+                    <tr
+                      key={contact.id}
+                      className="hover:bg-blue-50 dark:hover:bg-slate-800/40 transition-all cursor-pointer"
+                      onClick={() => { setSelectedContact(contact); setShowContactModal(true); }}
+                    >
+                      <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                        {contact.first_name} {contact.last_name}
                       </td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{contact.title}</td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 max-w-xs truncate" title={agencyName}>
-                         {agencyName}
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{contact.title || '-'}</td>
+                      <td className="px-6 py-4 text-blue-600 dark:text-blue-400 hover:underline">
+                        <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()}>
+                          {contact.email || '-'}
+                        </a>
                       </td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                         {contact.email}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                        {contact.phone}
+                        {contact.phone ? (
+                          <a href={`tel:${contact.phone}`} className="text-blue-600 dark:text-blue-400 hover:underline" onClick={(e) => e.stopPropagation()}>
+                            {contact.phone}
+                          </a>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                     </tr>
                   );
@@ -241,38 +248,109 @@ export default function Contacts() {
             </tbody>
           </table>
         </div>
-        
-        {!isCachedMode && (
-          <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
-            <div className="text-sm text-slate-500">
-              Viewing <span className="font-medium">{(page - 1) * 10 + 1}</span> to <span className="font-medium">{Math.min(page * 10, total)}</span> of <span className="font-medium">{total}</span>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                variant="secondary" 
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                <ChevronLeft size={16} /> Previous
-              </Button>
-              <Button 
-                size="sm" 
-                variant="secondary" 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Next <ChevronRight size={16} />
-              </Button>
-            </div>
+
+        {isCachedMode && (
+          <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500">
+            Showing all cached contacts ({displayContacts.length})
           </div>
         )}
-        {isCachedMode && (
-           <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500">
-             Showing all cached contacts ({displayContacts.length})
-           </div>
-        )}
       </Card>
+
+      {/* Pagination compacte */}
+      {!isCachedMode && totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            ← Previous
+          </button>
+
+          {generatePageNumbers().map((p, idx) => (
+            <button
+              key={`${String(p)}-${idx}`}
+              onClick={() => typeof p === 'number' && setPage(p)}
+              disabled={p === '...'}
+              className={`px-3 py-2 rounded-lg border transition-all select-none ${
+                p === page
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                  : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              } ${p === '...' ? 'opacity-60 cursor-default pointer-events-none' : ''}`}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            Next →
+          </button>
+        </div>
+      )}
+
+      {/* Contact modal */}
+      {selectedContact && (
+        <div
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedContact(null)}
+        >
+          <div
+            className="max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {selectedContact.first_name} {selectedContact.last_name}
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedContact(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Title</p>
+                <p className="text-slate-900 dark:text-white font-medium mt-2">{selectedContact.title || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Department</p>
+                <p className="text-slate-900 dark:text-white font-medium mt-2">{selectedContact.department || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Agency</p>
+                <p className="text-slate-900 dark:text-white font-medium mt-2">
+                  {agencies.find(a => a.id === selectedContact.agency_id)?.name || 'Unknown Agency'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Email</p>
+                <a href={`mailto:${selectedContact.email}`} className="text-blue-600 hover:underline mt-2 block">
+                  {selectedContact.email || '-'}
+                </a>
+              </div>
+            </div>
+
+            {selectedContact.phone && (
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-xs text-slate-500 uppercase font-semibold">Phone</p>
+                <a href={`tel:${selectedContact.phone}`} className="text-blue-600 hover:underline mt-2 block">
+                  {selectedContact.phone}
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
