@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     const user = await resp.json();
     let meta = (user.private_metadata as any)?.contactLimits || (user.public_metadata as any)?.contactLimits || null;
 
-    // ✅ IMPORTANT: Vérifier si la fenêtre 1 minute a expiré
+    // ✅ IMPORTANT: Vérifier si la fenêtre de 1 minute a expiré
     if (meta?.firstViewAt) {
       const elapsed = Date.now() - new Date(meta.firstViewAt).getTime();
       console.log(`⏱️ GET /api/limits: elapsed=${elapsed}ms, WINDOW_MS=${WINDOW_MS}, expired=${elapsed >= WINDOW_MS}`);

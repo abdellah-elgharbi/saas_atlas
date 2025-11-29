@@ -41,18 +41,18 @@ export default function Agencies() {
   const currentAgencies = agencies.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex justify-between items-end animate-slide-in">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Agencies Directory</h2>
-          <p className="text-slate-600 dark:text-slate-400">Browse all registered educational agencies.</p>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">Browse all registered educational agencies.</p>
         </div>
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-slate-500 dark:text-slate-400">
           Total: {agencies.length} | Page {currentPage} of {totalPages}
         </div>
       </div>
 
-      <Card className="overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+      <Card className="overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover-lift animate-fade-in">
         <div className="overflow-x-auto max-h-[calc(100vh-280px)]">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
@@ -69,7 +69,7 @@ export default function Agencies() {
                 <tr 
                   key={agency.id} 
                   onClick={() => setSelectedAgency(agency)}
-                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all cursor-pointer hover:shadow-md transform hover:scale-[1.01]"
                 >
                   <td className="px-6 py-4">
                     <div className="font-medium text-slate-900 dark:text-white">{agency.name}</div>
@@ -112,7 +112,7 @@ export default function Agencies() {
         <button
           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95"
         >
           ← Previous
         </button>
@@ -122,7 +122,7 @@ export default function Agencies() {
             <>
               <button
                 onClick={() => setCurrentPage(1)}
-                className="w-10 h-10 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="w-10 h-10 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all hover:scale-110 active:scale-95"
               >
                 1
               </button>
@@ -142,7 +142,7 @@ export default function Agencies() {
           )}
 
           <button
-            className="w-10 h-10 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg"
+              className="w-10 h-10 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg scale-105 shadow-md"
           >
             {currentPage}
           </button>
@@ -163,7 +163,7 @@ export default function Agencies() {
               )}
               <button
                 onClick={() => setCurrentPage(totalPages)}
-                className="w-10 h-10 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="w-10 h-10 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all hover:scale-110 active:scale-95"
               >
                 {totalPages}
               </button>
@@ -174,7 +174,7 @@ export default function Agencies() {
         <button
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95"
         >
           Next →
         </button>
@@ -183,11 +183,11 @@ export default function Agencies() {
       {/* Modal */}
       {selectedAgency && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
           onClick={() => setSelectedAgency(null)}
         >
           <div 
-            className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col"
+            className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -196,13 +196,13 @@ export default function Agencies() {
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   {selectedAgency.name}
                 </h3>
-                <p className="text-sm text-slate-500 mt-1">ID: {selectedAgency.id}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">ID: {selectedAgency.id}</p>
               </div>
               <button
                 onClick={() => setSelectedAgency(null)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex-shrink-0"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all hover:rotate-90 hover:scale-110 flex-shrink-0"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
               </button>
             </div>
 

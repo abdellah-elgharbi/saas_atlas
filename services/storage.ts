@@ -165,7 +165,7 @@ class StorageService {
     }
 
     if (isClient()) {
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
     }
     
     return { 

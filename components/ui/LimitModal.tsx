@@ -14,15 +14,15 @@ export const LimitModal: React.FC<LimitModalProps> = ({ isOpen, onClose, viewsTo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all scale-100 p-8 text-center relative">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all scale-100 p-8 text-center relative animate-scale-in">
         
         {/* Decorative background blob */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-red-50 to-transparent dark:from-red-900/20 pointer-events-none" />
 
         <div className="relative z-10">
-          <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-white dark:ring-slate-900">
-            <Lock className="w-8 h-8 text-red-600 dark:text-red-400" />
+          <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-white dark:ring-slate-900 animate-pulse-glow">
+            <Lock className="w-8 h-8 text-red-600 dark:text-red-400 animate-bounce" />
           </div>
 
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
@@ -36,7 +36,7 @@ export const LimitModal: React.FC<LimitModalProps> = ({ isOpen, onClose, viewsTo
 
           <div className="space-y-3">
             <Button 
-              className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-lg shadow-indigo-500/20"
+              className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-lg shadow-blue-500/30"
             >
               <Crown className="w-5 h-5 mr-2" /> Upgrade to Unlimited
             </Button>
