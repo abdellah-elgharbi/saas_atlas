@@ -29,39 +29,57 @@ export const useDailyLimit = (): UseDailyLimitReturn => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, user?.id]);
 
-  // Polling: vérifier toutes les 5 secondes si le limit a été réinitialisé
-  // Polling: vérifier toutes les 5 secondes si le limit a été réinitialisé
+  // Timer exact: calculer le temps restant et programmer la réinitialisation
   useEffect(() => {
-    if (!isLoaded || !limitReached || !user?.id) return;
+    if (!isLoaded || !user?.id) return;
 
-    const interval = setInterval(async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const refreshLimit = async () => {
       try {
-        // Appel DIRECT à Clerk via /api/limits (pas Supabase)
         const resp = await fetch(`/api/limits?userId=${encodeURIComponent(user.id)}`);
         if (!resp.ok) throw new Error(`API error: ${resp.status}`);
         
         const json = await resp.json();
         const meta = json?.meta || null;
+        const timeLeft = json?.timeLeft || 0;
         const viewedIds: string[] = meta?.viewedContactIds || [];
         const views = viewedIds.length;
         
-        console.log(`📊 Polling: views=${views}, LIMIT=50, firstViewAt=${meta?.firstViewAt}`);
+        console.log(`🔄 Refresh limit: views=${views}, timeLeft=${timeLeft}ms`);
         
-        // ✅ Si views < LIMIT, c'est que la fenêtre s'est réinitialisée
+        // Mettre à jour l'état
+        setViewsToday(views);
+        setLimitReached(views >= LIMIT);
+        
         if (views < LIMIT) {
-          console.log('✅ FENÊTRE RÉINITIALISÉE! Compteur passé de 50 à ' + views);
-          setViewsToday(views);
           setCachedContacts([]);
           setLimitReached(false);
         }
+        
+        // Si timeLeft > 0, programmer le prochain refresh exactement au moment de la réinitialisation
+        if (timeLeft > 0) {
+          console.log(`⏰ Timer programmé: réinitialisation dans ${timeLeft}ms (${Math.round(timeLeft / 1000 / 60)} minutes)`);
+          timeoutId = setTimeout(() => {
+            refreshLimit();
+          }, timeLeft);
+        }
       } catch (error) {
-        console.error('Erreur lors du polling du limit:', error);
+        console.error('Erreur lors du refresh du limit:', error);
       }
-    }, 5000); // Vérifier toutes les 5 secondes
+    };
 
-    return () => clearInterval(interval);
+    // Initialiser le timer
+    refreshLimit();
+
+    // Cleanup: annuler le timer si le composant se démonte ou les dépendances changent
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, limitReached, user?.id]);
+  }, [isLoaded, user?.id]);
 
   const loadState = async () => {
     try {
@@ -70,6 +88,8 @@ export const useDailyLimit = (): UseDailyLimitReturn => {
       setViewsToday(views);
       setCachedContacts(usr.cachedContacts || []);
       setLimitReached(views >= LIMIT);
+      
+      // Si limitReached, on va programmer le timer via le useEffect ci-dessus
     } catch (error) {
       console.error('Erreur lors du chargement de l\'état:', error);
     }

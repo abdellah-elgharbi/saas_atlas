@@ -30,7 +30,8 @@ export async function GET(req: Request) {
     const user = await resp.json();
     let meta = (user.private_metadata as any)?.contactLimits || (user.public_metadata as any)?.contactLimits || null;
 
-    // ✅ IMPORTANT: Vérifier si la fenêtre de 1 minute a expiré
+    // ✅ IMPORTANT: Vérifier si la fenêtre de 24h a expiré
+    let timeLeft = 0;
     if (meta?.firstViewAt) {
       const elapsed = Date.now() - new Date(meta.firstViewAt).getTime();
       console.log(`⏱️ GET /api/limits: elapsed=${elapsed}ms, WINDOW_MS=${WINDOW_MS}, expired=${elapsed >= WINDOW_MS}`);
@@ -52,10 +53,18 @@ export async function GET(req: Request) {
           },
           body: JSON.stringify({ private_metadata: { contactLimits: meta } }),
         });
+        // Après reset, timeLeft = WINDOW_MS (nouvelle fenêtre de 24h)
+        timeLeft = WINDOW_MS;
+      } else {
+        // Calculer le temps restant avant réinitialisation
+        timeLeft = WINDOW_MS - elapsed;
       }
+    } else {
+      // Pas de firstViewAt, donc pas de limite active, timeLeft = 0
+      timeLeft = 0;
     }
 
-    return NextResponse.json({ meta });
+    return NextResponse.json({ meta, timeLeft });
   } catch (err: any) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
