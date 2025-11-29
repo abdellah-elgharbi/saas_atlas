@@ -1,57 +1,191 @@
-# SaaS CRM Dashboard (Read Only)
+# Documentation Projet - SaaS CRM
 
-A modern, read-only dashboard for viewing educational agencies and contacts. This project is designed to demonstrate a high-quality data presentation interface with authentication, pagination, and usage limit logic.
+**Version:** 1.0  
+**Statut:** En production  
+**Dernière mise à jour:** Novembre 2024
 
-## 🏗️ Architecture (Proposed for Production)
+---
 
-For a production deployment using **Next.js 16** and **Clerk**, the architecture would be as follows:
+## Vue d'ensemble du projet
 
-```mermaid
-graph TD
-    User[User] -->|Auth Request| Clerk[Clerk Auth]
-    Clerk -->|Token| Middleware[Next.js Middleware]
-    Middleware -->|Protected Route| App[Next.js App Router]
-    
-    subgraph Dashboard
-        App --> Overview[Dashboard Page]
-        App --> Agencies[Agencies Table (Server Component)]
-        App --> Contacts[Contacts Table (Client Component)]
-    end
+Cette application est un système de gestion de la relation client (CRM) SaaS développé avec Next.js et Supabase. Elle permet de gérer des agences partenaires et leurs contacts associés avec un système de quotas quotidiens.
 
-    Contacts -->|Fetch Data| API[API Route /api/contacts]
-    API -->|Check Limit| DB[Database / KV Store]
-    
-    Contacts --(Limit: 50/day)--> UpgradePrompt[Upgrade Modal]
+### Technologies utilisées
+
+- **Frontend:** Next.js 14 (App Router), React, TypeScript
+- **Base de données:** Supabase PostgreSQL
+- **Authentification:** Clerk / Supabase Auth
+- **Styling:** Tailwind CSS
+- **Déploiement:** Vercel
+
+---
+
+## Architecture de l'application
+
+### Structure des données
+
+L'application repose sur trois entités principales :
+
+#### 1. Agences (`agencies`)
+
+Représente les organisations partenaires (académies, lycées, institutions).
+
+**Informations stockées :**
+- Identité : nom, type, localisation
+- Contact : téléphone, site web
+- Statistiques : nombre d'étudiants, nombre d'écoles
+- Statut : actif ou inactif
+
+#### 2. Contacts (`contacts`)
+
+Représente les personnes associées aux agences.
+
+**Informations stockées :**
+- Identité : prénom, nom
+- Coordonnées : email, téléphone
+- Position : titre, département
+- Relation : rattachement à une agence
+
+#### 3. Utilisateurs (`users`)
+
+Gère les comptes utilisateurs et leurs limitations d'accès.
+
+**Informations stockées :**
+- Identité : email, nom
+- Quotas : nombre de contacts vus par jour
+- Cache : liste des contacts déjà consultés
+- Horodatage : dernière réinitialisation
+
+---
+
+## Fonctionnalités principales
+
+### 1. Dashboard
+
+**Objectif :** Vue d'ensemble des données clés
+
+**Éléments affichés :**
+- Nombre total d'agences
+- Nombre total de contacts
+- Statistiques par région
+- Graphiques de répartition
+
+### 2. Gestion des agences
+
+**Objectif :** Consultation et gestion des organisations partenaires
+
+**Fonctionnalités :**
+- Liste complète des agences
+- Filtrage par région, type, statut
+- Recherche par nom
+- Visualisation des détails complets
+- Accès aux contacts associés
+
+### 3. Gestion des contacts
+
+**Objectif :** Consultation et gestion des personnes de contact
+
+**Fonctionnalités :**
+- Liste paginée (50 contacts par page)
+- Recherche multi-critères
+- Création de nouveaux contacts
+- Modification des informations
+- Suppression de contacts
+- Association avec une agence
+
+### 4. Système de quotas
+
+**Objectif :** Limiter l'accès aux coordonnées sensibles
+
+**Règles appliquées :**
+- Maximum 50 contacts consultables par jour
+- Réinitialisation automatique à minuit
+- Affichage d'un avertissement à l'approche de la limite
+- Blocage après dépassement de la limite
+- Cache en base de données pour persistance
+
+---
+
+## Flux de données
+
+### Récupération des agences
+
+```
+1. L'utilisateur accède à la page Agences
+2. L'application appelle supabaseService.getAgencies()
+3. Requête SQL vers la table 'agencies'
+4. Les données sont retournées et affichées
 ```
 
-## 🛠️ Current Tech Stack (Demo Version)
+### Consultation d'un contact
 
-This specific demo instance runs as a Single Page Application (SPA) to function within the browser sandbox environment.
+```
+1. L'utilisateur clique sur un contact
+2. Vérification du quota quotidien
+3. Si quota disponible :
+   - Affichage des coordonnées complètes
+   - Incrémentation du compteur
+   - Mise en cache du contact
+4. Si quota dépassé :
+   - Affichage d'un message d'erreur
+   - Proposition d'upgrade
+```
 
-- **Frontend**: React 19, TypeScript, Tailwind CSS
-- **Routing**: React Router DOM (Simulating Next.js App Router structure)
-- **Auth**: Simulated Context (Mimics Clerk behavior)
-- **Storage**: Browser LocalStorage (Simulating Database)
-- **UI Components**: Custom components inspired by Shadcn/UI
+### Création d'un contact
 
-## 🚀 Features
+```
+1. L'utilisateur remplit le formulaire
+2. Validation des données côté client
+3. Appel à supabaseService.createContact()
+4. Insertion en base de données
+5. Confirmation et rafraîchissement de la liste
+```
 
-1.  **Authentication**: Secure access simulation.
-2.  **Agencies Directory**: Detailed table with horizontal scroll for rich data viewing.
-3.  **Contacts Directory**:
-    -   Paginated view (10 items per page).
-    -   Data masking (Email/Phone hidden by default).
-    -   "Reveal" functionality to unmask data.
-4.  **Usage Limits**:
-    -   Users are limited to 50 contact reveals per day.
-    -   Visual progress bar in Dashboard.
-    -   Upgrade prompt when limit is reached.
+---
 
-## 📦 Deployment
+## Service Supabase
 
-This project is ready to be ported to Vercel.
+Le fichier `services/supabaseService.ts` centralise toutes les opérations sur la base de données.
 
-1.  Initialize a Next.js project: `npx create-next-app@latest`
-2.  Install dependencies: `npm install @clerk/nextjs lucide-react`
-3.  Copy the component logic from `pages/` into Next.js `app/` directory.
-4.  Replace `storageService` with server-side Prisma/SQL calls.
+### Méthodes disponibles
+
+#### Agences
+- `getAgencies()` - Récupère toutes les agences
+- `createAgency(data)` - Crée une nouvelle agence
+
+#### Contacts
+- `getContacts(page, limit)` - Liste paginée de contacts
+- `searchContacts(query)` - Recherche par nom, email, titre
+- `createContact(data)` - Crée un nouveau contact
+- `updateContact(id, data)` - Modifie un contact existant
+- `deleteContact(id)` - Supprime un contact
+
+#### Utilisateurs
+- `getUser()` - Récupère l'utilisateur connecté
+- `incrementViewCount(amount)` - Incrémente le compteur de vues
+- `canViewContacts()` - Vérifie si la limite est atteinte
+
+---
+
+## Sécurité
+
+### Row Level Security (RLS)
+
+Supabase applique des politiques de sécurité au niveau des lignes :
+
+**Agences et Contacts :**
+- Lecture autorisée pour tous les utilisateurs authentifiés
+- Modification réservée aux administrateurs
+
+**Utilisateurs :**
+- Chaque utilisateur ne peut accéder qu'à ses propres données
+- Lecture et modification limitées à son propre compte
+
+### Authentification
+
+Toutes les requêtes nécessitent un utilisateur authentifié via Clerk ou Supabase Auth. Le token JWT est automatiquement inclus dans les en-têtes des requêtes.
+
+---
+
+**Préparé par :** Équipe Technique  
+**Dernière révision :** Novembre 2024
