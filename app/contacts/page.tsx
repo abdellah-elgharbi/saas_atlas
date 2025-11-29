@@ -116,39 +116,32 @@ export default function Contacts() {
     );
   }
 
-  // Génère une liste compacte de pages à afficher (1, ..., n-2..n+2, ..., total)
   const generatePageNumbers = () => {
     const pages: (number | '...')[] = [];
     const total = totalPages;
     const current = page;
 
     if (total <= 7) {
-      // Si peu de pages, afficher toutes
       for (let i = 1; i <= total; i++) pages.push(i);
       return pages;
     }
 
-    // Toujours afficher la première page
     pages.push(1);
 
-    // Si l'écart entre début et current est important, ajouter '...'
     if (current > 4) {
       pages.push('...');
     }
 
-    // Ajouter pages autour de la page courante (current-2 -> current+2)
     const start = Math.max(2, current - 2);
     const end = Math.min(total - 1, current + 2);
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
 
-    // Si l'écart entre current et la fin est important, ajouter '...'
     if (current < total - 3) {
       pages.push('...');
     }
 
-    // Toujours afficher la dernière page
     pages.push(total);
 
     return pages;
@@ -159,7 +152,7 @@ export default function Contacts() {
       <LimitModal isOpen={showModal} onClose={() => setShowModal(false)} viewsToday={viewsToday} />
 
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-shrink-0">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
             Contacts Directory
@@ -171,7 +164,7 @@ export default function Contacts() {
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
             {isCachedMode 
-              ? "Affichage des contacts déjà consultés aujourd’hui." 
+              ? "Affichage des contacts déjà consultés aujourd'hui." 
               : "Recherchez et connectez-vous avec les responsables éducatifs."}
           </p>
         </div>
@@ -188,7 +181,7 @@ export default function Contacts() {
       {/* Cached mode info */}
       {isCachedMode && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 shadow-sm flex items-start gap-4">
-          <Database className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+          <Database className="w-6 h-6 text-blue-600 dark:text-blue-300 flex-shrink-0" />
           <div>
             <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm">Données en cache</h4>
             <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
@@ -198,9 +191,9 @@ export default function Contacts() {
         </div>
       )}
 
-      {/* Card with table */}
+      {/* Card with table - Fixed height */}
       <Card className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg backdrop-blur-sm">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[calc(100vh-320px)]">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
               <tr>
@@ -227,8 +220,13 @@ export default function Contacts() {
                         {contact.first_name} {contact.last_name}
                       </td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{contact.title || '-'}</td>
-                      <td className="px-6 py-4 text-blue-600 dark:text-blue-400 hover:underline">
-                        <a href={`mailto:${contact.email}`} onClick={(e) => e.stopPropagation()}>
+                      <td className="px-6 py-4">
+                        <a 
+                          href={`mailto:${contact.email}`} 
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-blue-600 dark:text-blue-400 hover:underline truncate block max-w-[250px]"
+                          title={contact.email}
+                        >
                           {contact.email || '-'}
                         </a>
                       </td>
@@ -258,7 +256,7 @@ export default function Contacts() {
 
       {/* Pagination compacte */}
       {!isCachedMode && totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+        <div className="flex justify-center items-center gap-2 flex-wrap">
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
@@ -299,10 +297,10 @@ export default function Contacts() {
           onClick={() => setSelectedContact(null)}
         >
           <div
-            className="max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-6"
+            className="max-w-2xl w-full max-h-[85vh] overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start p-6 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                   {selectedContact.first_name} {selectedContact.last_name}
@@ -310,43 +308,44 @@ export default function Contacts() {
               </div>
               <button
                 onClick={() => setSelectedContact(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl flex-shrink-0"
               >
                 ×
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Title</p>
-                <p className="text-slate-900 dark:text-white font-medium mt-2">{selectedContact.title || '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Department</p>
-                <p className="text-slate-900 dark:text-white font-medium mt-2">{selectedContact.department || '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Agency</p>
-                <p className="text-slate-900 dark:text-white font-medium mt-2">
-                  {agencies.find(a => a.id === selectedContact.agency_id)?.name || 'Unknown Agency'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold">Email</p>
-                <a href={`mailto:${selectedContact.email}`} className="text-blue-600 hover:underline mt-2 block">
-                  {selectedContact.email || '-'}
-                </a>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Title</p>
+                  <p className="text-slate-900 dark:text-white font-medium mt-2">{selectedContact.title || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Department</p>
+                  <p className="text-slate-900 dark:text-white font-medium mt-2">{selectedContact.department || '-'}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Agency</p>
+                  <p className="text-slate-900 dark:text-white font-medium mt-2">
+                    {agencies.find(a => a.id === selectedContact.agency_id)?.name || 'Unknown Agency'}
+                  </p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Email</p>
+                  <a href={`mailto:${selectedContact.email}`} className="text-blue-600 hover:underline mt-2 block break-all">
+                    {selectedContact.email || '-'}
+                  </a>
+                </div>
+                {selectedContact.phone && (
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-slate-500 uppercase font-semibold">Phone</p>
+                    <a href={`tel:${selectedContact.phone}`} className="text-blue-600 hover:underline mt-2 block">
+                      {selectedContact.phone}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
-
-            {selectedContact.phone && (
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                <p className="text-xs text-slate-500 uppercase font-semibold">Phone</p>
-                <a href={`tel:${selectedContact.phone}`} className="text-blue-600 hover:underline mt-2 block">
-                  {selectedContact.phone}
-                </a>
-              </div>
-            )}
           </div>
         </div>
       )}
