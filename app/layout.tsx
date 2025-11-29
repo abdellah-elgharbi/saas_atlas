@@ -6,8 +6,8 @@ import { Layout } from '@/components/Layout';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SaaS Data Portal',
-  description: 'SaaS CRM Starter Application',
+  title: 'ATLAS',
+  description: 'ATLAS Application',
 };
 
 export const dynamic = 'force-dynamic';

@@ -58,7 +58,7 @@ export const Navbar: React.FC = () => {
       {/* Mobile Header (Always fixed at top) */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 shadow-sm transition-all duration-300">
         <ToggleButton mobile />
-        <span className="font-bold text-slate-900 dark:text-white">SaaS CRM</span>
+        <span className="font-bold text-slate-900 dark:text-white">ATLAS</span>
         <ThemeToggle variant="minimal" />
       </header>
 
