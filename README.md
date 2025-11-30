@@ -80,8 +80,7 @@ Gère les comptes utilisateurs et leurs limitations d'accès.
 **Objectif :** Visualisation des personnes de contact
 
 **Fonctionnalités :**
-- Liste paginée (50 contacts par page)
-- Recherche multi-critères
+- Liste paginée
 - Affichage des informations détaillées
 - Consultation limitée par quotas quotidiens
 
@@ -166,15 +165,14 @@ Supabase applique des politiques de sécurité au niveau des lignes :
 **Agences et Contacts :**
 - Lecture autorisée pour tous les utilisateurs authentifiés
 - Aucune modification possible (lecture seule)
-- Création, modification et suppression réservées aux administrateurs
 
 **Utilisateurs :**
 - Chaque utilisateur ne peut accéder qu'à ses propres données
-- Lecture et modification limitées à son propre compte
+- Lecture  limitées à son propre compte
 
 ### Authentification
 
-Toutes les requêtes nécessitent un utilisateur authentifié via Clerk ou Supabase Auth. Le token JWT est automatiquement inclus dans les en-têtes des requêtes.
+Toutes les requêtes nécessitent un utilisateur authentifié via Clerk . Le token JWT est automatiquement inclus dans les en-têtes des requêtes.
 
 ---
 
