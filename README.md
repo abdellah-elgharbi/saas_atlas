@@ -2,7 +2,6 @@
 
 **Version:** 1.0  
 **Statut:** En production  
-**Dernière mise à jour:** Novembre 2024
 
 ---
 
